@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicSense - Grievance & Welfare Intelligence</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --color-bg: #ffffff;
+            /* White Background */
+            --color-surface: #f1f5f9;
+            --color-surface-glass: rgba(255, 255, 255, 0.7);
+            /* Light Glass */
+            --color-primary: #8b5cf6;
+            --color-primary-hover: #7c3aed;
+            --color-secondary: #ec4899;
+            --color-accent: #f59e0b;
+            --color-text-main: #000000;
+            /* Black Text */
+            --color-text-muted: #475569;
+            /* Slate 600 */
+            --color-success: #10b981;
+
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            --shadow-glow: 0 0 15px rgba(139, 92, 246, 0.3);
+
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-full: 9999px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--color-bg);
+            color: var(--color-text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.05), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.05), transparent 40%);
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--color-primary);
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        /* Utilities */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .glass {
+            background: var(--color-surface-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            /* Light border */
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: var(--radius-lg);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+        }
+
+        .btn-outline {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--color-text-main);
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #7c3aed, #db2777);
+            /* Darker gradient for light bg */
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .section {
+            padding: 5rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- TRANSLATIONS ---
+        const TEXT = {
+            English: {
+                nav: { home: 'Home', dashboard: 'My Status', services: 'Services', help: 'Get Help', stateSummary: 'Executive Summary', officials: 'Official Portal' },
+                hero: { title1: 'Tamil Nadu Smart', title2: 'Grievance Intelligence', desc: 'Report civic issues, track resolutions, and match with welfare schemes through our intelligent AI-driven portal. Empowering citizens for a better tomorrow.', btnReport: 'File a New Grievance' },
+                form: {
+                    title: 'Submit New Grievance', subtitle: 'Powered by AI Department Routing', sec1: 'Identity & Verification', aadhar: 'Aadhar Number', mobile: 'Mobile Number', getOtp: 'Get OTP', resend: 'Resend', enterOtp: 'Enter 4-Digit OTP', verify: 'Verify OTP', verified: 'Identity Verified', name: 'Full Name',
+                    sec2: 'Location Details', district: 'Select District', taluk: 'Select Taluk', village: 'Select Village/Town', pincode: 'Pincode',
+                    sec3: 'Grievance Details', desc: 'Explain your issue in detail (Tamil/Hindi/English supported)', evidence: 'Upload Evidence (Photo/Video)',
+                    routing: 'Routing to:', aiRem: 'AI detected:', verifyRem: 'Please verify mobile number first.',
+                    submitting: 'Processing AI Analysis...', submit: 'Submit Grievance to Govt',
+                    successTitle: 'Grievance Registered!', successMsg: 'Thank you for your submission', idMsg: 'Your Complaint Tracking ID is', close: 'Return to Dashboard'
+                },
+                helpModal: {
+                    title: 'Help & Support',
+                    sec1Title: 'Submit Your Grievance', sec1Desc: 'Fill in your complaint details and upload proof if available. Ensure your mobile number is verified for tracking.',
+                    sec2Title: 'AI Analysis', sec2Desc: 'Our system automatically classifies the issue, assigns priority, and identifies the responsible department to speed up resolution.',
+                    sec3Title: 'Welfare Support', sec3Desc: 'Eligible citizens receive welfare scheme recommendations based on their grievance context and profile.',
+                    btn: 'Got it'
+                },
+                features: {
+                    mainTitle: 'Intelligent Civic Portal', mainDesc: 'Experience the next generation of government interaction with our AI-powered features.',
+                    items: [
+                        { title: 'Smart Routing', desc: 'Auto-detects department from description.' },
+                        { title: 'Urgency Levels', desc: 'Prioritizes cases based on severity.' },
+                        { title: 'Welfare Matching', desc: 'Suggests schemes based on your profile.' }
+                    ]
+                },
+                services: {
+                    mainTitle: 'Government Services', mainDesc: 'Select a department to view available services and responsibilities.',
+                    tapHint: 'Tap to expand details ↓',
+                    depts: [
+                        { name: 'Water Supply Services', services: ['Safe drinking water supply', 'Water treatment plants', 'Sewerage management', 'Govt water schemes', 'Quality complaints'] },
+                        { name: 'Electricity Board (TNEB)', services: ['Power supply management', 'New connections', 'Transmission & Distribution', 'Online bill payment', 'Resolving outages'] },
+                        { name: 'Social Welfare Department', services: ['Welfare for Women/Children', 'Financial assistance', 'Education/Health support', 'EWS upliftment', 'Inclusive development'] },
+                        { name: 'Revenue Department', services: ['Land records & Patta', 'Certificates (Income/Nativity)', 'Revenue collection', 'Disaster relief', 'Local administration'] },
+                        { name: 'Transport Department', services: ['Driving licenses', 'Vehicle registration', 'Road tax collection', 'Road safety', 'Public transport regulation'] }
+                    ]
+                },
+                dashboard: {
+                    title: 'My Dashboard', subtitle: 'Welcome back, Citizen', logout: 'Logout', newRequest: 'New Request',
+                    statGrievances: 'My Grievances', statResolved: 'Resolved', statWelfare: 'Welfare Matches',
+                    trends: { live: 'Live Updates', current: 'Current', profile: 'Based on Profile' },
+                    reportedTitle: 'My Reported Issues', empty: 'No grievances reported yet.'
+                },
+                official: {
+                    portalTitle: 'Official Portal:', portalSubtitle: 'Assigned Grievances & Task Management', logout: 'Logout',
+                    queueTitle: 'My Department Queue', statusLbl: 'Status', registeredDate: 'Registration Date',
+                    detailsSec: 'Grievance Details', urgencyLbl: 'Urgency Level', deptLbl: 'Department', locationLbl: 'Location', evidenceLbl: 'Evidence Uploaded',
+                    applicantSec: 'Applicant Information', takeActionSec: 'Take Action', remarksLbl: 'Department Remarks', submitBtn: 'Submit Details',
+                    actionTitle: 'Action on Grievance:', backBtn: '← Back to Dashboard',
+                    aggregationTitle: 'Executive Aggregate Summary', aggregationDesc: 'Real-time grievance statistics across state departments.',
+                    loginTitle: 'Department Authority Login', loginSubtitle: 'Secure Access for Govt Officials', loginBtn: 'Login',
+                    filters: { all: 'All', pending: 'Pending', progress: 'In Progress', resolved: 'Resolved' },
+                    noRecords: 'No records found for this filter.',
+                    descLbl: 'Description',
+                    deptIdLbl: 'Department ID', officerUser: 'Officer Username', passLbl: 'Password',
+                    mgmtStats: 'Management Statistics', totalComplaints: 'Total Complaints',
+                    deptName: 'Department Name', complaintCount: 'Complaint Count', liveStatus: 'Live Status', activeMonitoring: 'ACTIVE MONITORING'
+                },
+                modal: { details: 'Grievance Details', compId: 'Complaint ID', status: 'Status', desc: 'Description', appDetails: 'Applicant Details', name: 'Full Name', aadhar: 'Aadhar Number', mobile: 'Mobile', location: 'Location', urgency: 'Urgency', date: 'Submitted On', close: 'Close' }
+            },
+            Tamil: {
+                nav: { home: 'முகப்பு', dashboard: 'எனது நிலை', services: 'சேவைகள்', help: 'உதவி', stateSummary: 'நிர்வாக சுருக்கம்', officials: 'அதிகாரப்பூர்வ போர்டல்' },
+                hero: { title1: 'தமிழ்நாடு ஸ்மார்ட்', title2: 'குறைதீர்க்கும் நுண்ணறிவு', desc: 'எங்கள் அறிவார்ந்த AI-இயக்கப்படும் போர்டல் மூலம் மக்கள் குறைகளைப் புகாரளிக்கவும், தீர்வுகளைக் கண்காணிக்கவும் மற்றும் நலத்திட்டங்களுடன் பொருத்தவும். சிறந்த நாளைக்காக குடிமக்களை மேம்படுத்துதல்.', btnReport: 'புதிய புகாரைப் பதிவு செய்யவும்' },
+                form: {
+                    title: 'புதிய புகாரைச் சமர்ப்பிக்கவும்', subtitle: 'AI துறை ரூட்டிங் மூலம் இயக்கப்படுகிறது', sec1: 'அடையாளம் மற்றும் சரிபார்ப்பு', aadhar: 'ஆதார் எண்', mobile: 'மொபைல் எண்', getOtp: 'OTP பெறவும்', resend: 'மீண்டும் அனுப்புக', enterOtp: '4-இலக்க OTP ஐ உள்ளிடவும்', verify: 'OTP ஐச் சரிபார்க்கவும்', verified: 'அடையாளம் சரிபார்க்கப்பட்டது', name: 'முழு பெயர்',
+                    sec2: 'இருப்பிட விவரங்கள்', district: 'மாவட்டத்தைத் தேர்ந்தெடுக்கவும்', taluk: 'தாலுக்கைத் தேர்ந்தெடுக்கவும்', village: 'கிராமம்/நகரத்தைத் தேர்ந்தெடுக்கவும்', pincode: 'அஞ்சல் குறியீடு',
+                    sec3: 'குறை விவரங்கள்', desc: 'உங்கள் சிக்கலை விரிவாக விளக்கவும் (தமிழ்/இந்தி/ஆங்கிலம் ஆதரிக்கப்படுகிறது)', evidence: 'சான்றுகளைப் பதிவேற்றவும் (புகைப்படம்/வீடியோ)',
+                    routing: 'இதற்கு ரூட்டிங் செய்யப்படுகிறது:', aiRem: 'AI கண்டறியப்பட்டது:', verifyRem: 'தயவுசெய்து முதலில் மொபைல் எண்ணைச் சரிபார்க்கவும்.',
+                    submitting: 'AI பகுப்பாய்வு செயலாக்கப்படுகிறது...', submit: 'அரசிடம் புகாரைச் சமர்ப்பிக்கவும்',
+                    successTitle: 'புகார் பதிவு செய்யப்பட்டது!', successMsg: 'உங்கள் சமர்ப்பிப்பிற்கு நன்றி', idMsg: 'உங்கள் புகார் கண்காணிப்பு ஐடி', close: 'டாஷ்போர்டிற்குத் திரும்பு'
+                },
+                helpModal: {
+                    title: 'உதவி & ஆதரவு',
+                    sec1Title: 'உங்கள் புகாரைச் சமர்ப்பிக்கவும்', sec1Desc: 'உங்கள் புகார் விவரங்களைப் பூர்த்தி செய்து ஆதாரம் இருந்தால் பதிவேற்றவும். கண்காணிப்புக்கு உங்கள் மொபைல் எண் சரிபார்க்கப்பட்டுள்ளதா என்பதை உறுதிப்படுத்தவும்.',
+                    sec2Title: 'AI பகுப்பாய்வு', sec2Desc: 'எங்கள் அமைப்பு சிக்கலை தானாகவே வகைப்படுத்தி, முன்னுரிமையை ஒதுக்கி, தீர்வை விரைவுபடுத்த பொறுப்பான துறையை அடையாளம் காண்கிறது.',
+                    sec3Title: 'நலத்திட்ட ஆதரவு', sec3Desc: 'தகுதியான குடிமக்கள் தங்கள் புகார் சூழல் மற்றும் சுயவிவரத்தின் அடிப்படையில் நலத்திட்ட பரிந்துரைகளைப் பெறுகிறார்கள்.',
+                    btn: 'புரிந்தது'
+                },
+                features: {
+                    mainTitle: 'அறிவார்ந்த குடிமக்கள் போர்டல்', mainDesc: 'எங்கள் AI-இயங்கும் அம்சங்களுடன் அடுத்த தலைமுறை அரசு தொடர்புகளை அனுபவிக்கவும்.',
+                    items: [
+                        { title: 'ஸ்மார்ட் ரூட்டிங்', desc: 'விளக்கத்திலிருந்து துறையை தானாகவே கண்டறியும்.' },
+                        { title: 'அவசர நிலைகள்', desc: 'தீவிரத்தின் அடிப்படையில் வழக்குகளுக்கு முன்னுரிமை அளிக்கிறது.' },
+                        { title: 'நலத்திட்ட பொருத்தம்', desc: 'உங்கள் சுயவிவரத்தின் அடிப்படையில் திட்டங்களை பரிந்துரைக்கிறது.' }
+                    ]
+                },
+                services: {
+                    mainTitle: 'அரசு சேவைகள்', mainDesc: 'கிடைக்கக்கூடிய சேவைகள் மற்றும் பொறுப்புகளைப் பார்க்க ஒரு துறையைத் தேர்ந்தெடுக்கவும்.',
+                    tapHint: 'விவரங்களை விரிவுபடுத்த தட்டவும் ↓',
+                    depts: [
+                        { name: 'குடிநீர் வழங்கல் சேவைகள்', services: ['பாதுகாப்பான குடிநீர் வழங்கல்', 'நீர் சுத்திகரிப்பு நிலையங்கள்', 'கழிவுநீர் மேலாண்மை', 'அரசு குடிநீர் திட்டங்கள்', 'தரமான புகார்கள்'] },
+                        { name: 'மின்சார வாரியம் (TNEB)', services: ['மின்சாரம் வழங்கல் மேலாண்மை', 'புதிய இணைப்புகள்', 'மின் கடத்தல் & விநியோகம்', 'ஆன்லைன் கட்டணம் செலுத்துதல்', 'மின் தடையைச் சரிசெய்தல்'] },
+                        { name: 'சமூக நலத்துறை', services: ['பெண்கள்/குழந்தைகள் நலன்', 'நிதி உதவி', 'கல்வி/சுகாதார ஆதரவு', 'EWS மேம்பாடு', 'உள்ளடக்கிய வளர்ச்சி'] },
+                        { name: 'வருவாய்த்துறை', services: ['நில ஆவணங்கள் & பட்டா', 'சான்றிதழ்கள் (வருமானம்/இருப்பிடம்)', 'வருவாய் வசூல்', 'பேரிடர் நிவாரணம்', 'உள்ளூர் நிர்வாகம்'] },
+                        { name: 'போக்குவரத்து துறை', services: ['ஓட்டுநர் உரிமங்கள்', 'வாகன பதிவு', 'சாலை வரி வசூல்', 'சாலை பாதுகாப்பு', 'பொது போக்குவரத்து ஒழுங்குமுறை'] }
+                    ]
+                },
+                dashboard: {
+                    title: 'எனது டாஷ்போர்டு', subtitle: 'மீண்டும் வருக, குடிமகனே', logout: 'வெளியேறு', newRequest: 'புதிய கோரிக்கை',
+                    statGrievances: 'எனது குறைகள்', statResolved: 'தீர்வு காணப்பட்டது', statWelfare: 'நலத்திட்ட பொருத்தங்கள்',
+                    trends: { live: 'நேரடி புதுப்பிப்புகள்', current: 'தற்போதைய', profile: 'சுயவிவரத்தின் அடிப்படையில்' },
+                    reportedTitle: 'எனது புகாரளிக்கப்பட்ட சிக்கல்கள்', empty: 'இதுவரை புகார்கள் எதுவும் இல்லை.'
+                },
+                official: {
+                    portalTitle: 'அதிகாரப்பூர்வ போர்டல்:', portalSubtitle: 'ஒதுக்கப்பட்ட குறைகள் & பணி மேலாண்மை', logout: 'வெளியேறு',
+                    queueTitle: 'எனது துறை வரிசை', statusLbl: 'நிலை', registeredDate: 'பதிவு தேதி',
+                    detailsSec: 'குறை விவரங்கள்', urgencyLbl: 'அவசர நிலை', deptLbl: 'துறை', locationLbl: 'இருப்பிடம்', evidenceLbl: 'சான்றுகள் பதிவேற்றப்பட்டன',
+                    applicantSec: 'விண்ணப்பதாரர் தகவல்', takeActionSec: 'நடவடிக்கை எடுக்கவும்', remarksLbl: 'துறை கருத்துக்கள்', submitBtn: 'விவரங்களைச் சமர்ப்பிக்கவும்',
+                    actionTitle: 'குறை மீதான நடவடிக்கை:', backBtn: '← டாஷ்போர்டிற்குத் திரும்பு',
+                    aggregationTitle: 'நிர்வாக ஒட்டுமொத்த சுருக்கம்', aggregationDesc: 'மாநிலத் துறைகளில் நிகழ்நேர புகார் புள்ளிவிவரங்கள்.',
+                    loginTitle: 'துறை அதிகாரப்பூர்வ உள்நுழைவு', loginSubtitle: 'அரசு அதிகாரிகளுக்கான பாதுகாப்பான அணுகல்', loginBtn: 'உள்நுழை',
+                    filters: { all: 'அனைத்தும்', pending: 'நிலுவையில் உள்ளது', progress: 'செயல்பாட்டில் உள்ளது', resolved: 'தீர்வு காணப்பட்டது' },
+                    noRecords: 'இந்த வடிப்பானுக்கு எந்தப் பதிவுகளும் இல்லை.',
+                    descLbl: 'விளக்கம்',
+                    deptIdLbl: 'துறை ஐடி', officerUser: 'அதிகாரி பயனர் பெயர்', passLbl: 'கடவுச்சொல்',
+                    mgmtStats: 'நிர்வாக புள்ளிவிவரங்கள்', totalComplaints: 'மொத்த புகார்கள்',
+                    deptName: 'துறை பெயர்', complaintCount: 'புகார் எண்ணிக்கை', liveStatus: 'நேரடி நிலை', activeMonitoring: 'செயலில் உள்ள கண்காணிப்பு'
+                },
+                modal: { details: 'குறை விவரங்கள்', compId: 'புகார் ஐடி', status: 'நிலை', desc: 'விளக்கம்', appDetails: 'விண்ணப்பதாரர் விவரங்கள்', name: 'முழு பெயர்', aadhar: 'ஆதார் எண்', mobile: 'மொபைல்', location: 'இருப்பிடம்', urgency: 'அவசரம்', date: 'சமர்ப்பிக்கப்பட்ட தேதி', close: 'மூடுக' }
+            },
+            Hindi: {
+                nav: { home: 'मुख्य पृष्ठ', dashboard: 'मेरी स्थिति', services: 'सेवाएं', help: 'सहायता लें', stateSummary: 'कार्यकारी सारांश', officials: 'आधिकारिक पोर्टल' },
+                hero: { title1: 'तमिलनाडु स्मार्ट', title2: 'शिकायत बुद्धिमत्ता', desc: 'हमारे बुद्धिमान AI-संचालित पोर्टल के माध्यम से नागरिक मुद्दों की रिपोर्ट करें, समाधान ट्रैक करें और कल्याणकारी योजनाओं के साथ मिलान करें। बेहतर कल के लिए नागरिकों को सशक्त बनाना।', btnReport: 'नई शिकायत दर्ज करें' },
+                form: {
+                    title: 'नई शिकायत जमा करें', subtitle: 'AI विभाग रूटिंग द्वारा संचालित', sec1: 'पहचान और सत्यापन', aadhar: 'आधार संख्या', mobile: 'मोबाइल नंबर', getOtp: 'OTP प्राप्त करें', resend: 'पुनः भेजें', enterOtp: '4-अंकीय OTP दर्ज करें', verify: 'OTP सत्यापित करें', verified: 'पहचान सत्यापित', name: 'पूरा नाम',
+                    sec2: 'स्थान विवरण', district: 'जिला चुनें', taluk: 'तालुका चुनें', village: 'गांव/शहर चुनें', pincode: 'पिनकोड',
+                    sec3: 'शिकायत विवरण', desc: 'अपनी समस्या को विस्तार से समझाएं (तमिल/हिंदी/अंग्रेजी समर्थित)', evidence: 'साक्ष्य अपलोड करें (फोटो/वीडियो)',
+                    routing: 'रूटिंग की जा रही है:', aiRem: 'AI पाया:', verifyRem: 'कृपया पहले मोबाइल नंबर सत्यापित करें।',
+                    submitting: 'AI विश्लेषण संसाधित किया जा रहा है...', submit: 'सरकार को शिकायत जमा करें',
+                    successTitle: 'शिकायत दर्ज हो गई!', successMsg: 'आपकी प्रस्तुति के लिए धन्यवाद', idMsg: 'आपकी शिकायत ट्रैकिंग आईडी है', close: 'डैशबोर्ड पर लौटें'
+                },
+                helpModal: {
+                    title: 'मदद और समर्थन',
+                    sec1Title: 'अपनी शिकायत जमा करें', sec1Desc: 'अपनी शिकायत का विवरण भरें और यदि उपलब्ध हो तो प्रमाण अपलोड करें। ट्रैकिंग के लिए सुनिश्चित करें कि आपका मोबाइल नंबर सत्यापित है।',
+                    sec2Title: 'एआई विश्लेषण', sec2Desc: 'हमारा सिस्टम समस्या को स्वचालित रूप से वर्गीकृत करता है, प्राथमिकता देता है, और समाधान में तेजी लाने के लिए जिम्मेदार विभाग की पहचान करता है।',
+                    sec3Title: 'कल्याण सहायता', sec3Desc: 'पात्र नागरिकों को उनकी शिकायत के संदर्भ और प्रोफ़ाइल के आधार पर कल्याण योजना की सिफारिशें मिलती हैं।',
+                    btn: 'समझ गया'
+                },
+                features: {
+                    mainTitle: 'बुद्धिमान नागरिक पोर्टल', mainDesc: 'हमारी AI-संचालित सुविधाओं के साथ अगली पीढ़ी के सरकारी इंटरैक्शन का अनुभव करें।',
+                    items: [
+                        { title: 'स्मार्ट रूटिंग', desc: 'विवरण से स्वचालित रूप से विभाग का पता लगाता है।' },
+                        { title: 'जल्दबाजी के स्तर', desc: 'गंभीरता के आधार पर मामलों को प्राथमिकता देता है।' },
+                        { title: 'कल्याण मिलान', desc: 'आपके प्रोफाइल के आधार पर योजनाओं का सुझाव देता है।' }
+                    ]
+                },
+                services: {
+                    mainTitle: 'सरकारी सेवाएं', mainDesc: 'उपलब्ध सेवाओं और जिम्मेदारियों को देखने के लिए एक विभाग चुनें।',
+                    tapHint: 'विवरण विस्तार करने के लिए टैप करें ↓',
+                    depts: [
+                        { name: 'जल आपूर्ति सेवाएं', services: ['सुरक्षित पेयजल आपूर्ति', 'जल उपचार संयंत्र', 'सीवरेज प्रबंधन', 'सरकारी जल योजनाएं', 'गुणवत्ता संबंधी शिकायतें'] },
+                        { name: 'बिजली बोर्ड (TNEB)', services: ['बिजली आपूर्ति प्रबंधन', 'नए कनेक्शन', 'पारेषण और वितरण', 'ऑनलाइन बिल भुगतान', 'बिजली कटौती का समाधान'] },
+                        { name: 'समाज कल्याण विभाग', services: ['महिला/बाल कल्याण', 'वित्तीय सहायता', 'शिक्षा/स्वास्थ्य सहायता', 'EWS उत्थान', 'समावेशी विकास'] },
+                        { name: 'राजस्व विभाग', services: ['भूमि रिकॉर्ड और पट्टा', 'प्रमाण पत्र (आय/निवास)', 'राजस्व संग्रह', 'आपदा राहत', 'स्थानीय प्रशासन'] },
+                        { name: 'परिवहन विभाग', services: ['ड्राइविंग लाइसेंस', 'vehicle पंजीकरण', 'रोड टैक्स संग्रह', 'सड़क सुरक्षा', 'सार्वजनिक परिवहन विनियमन'] }
+                    ]
+                },
+                dashboard: {
+                    title: 'मेरा डैशबोर्ड', subtitle: 'वापस स्वागत है, नागरिक', logout: 'लॉगआउट', newRequest: 'नया अनुरोध',
+                    statGrievances: 'मेरी शिकायतें', statResolved: 'समाधान किया गया', statWelfare: 'कल्याण मिलान',
+                    trends: { live: 'लाइव अपडेट', current: 'वर्तमान', profile: 'प्रोफ़ाइल के आधार पर' },
+                    reportedTitle: 'मेरे द्वारा रिपोर्ट किए गए मुद्दे', empty: 'अभी तक कोई शिकायत दर्ज नहीं की गई है।'
+                },
+                official: {
+                    portalTitle: 'आधिकारिक पोर्टल:', portalSubtitle: 'सौंपी गई शिकायतें और कार्य प्रबंधन', logout: 'लॉगआउट',
+                    queueTitle: 'मेरी विभाग कतार', statusLbl: 'स्थिति', registeredDate: 'पंजीकरण तिथि',
+                    detailsSec: 'शिकायत विवरण', urgencyLbl: 'जल्दबाजी का स्तर', deptLbl: 'विभाग', locationLbl: 'स्थान', evidenceLbl: 'साक्ष्य अपलोड किए गए',
+                    applicantSec: 'आवेदक की जानकारी', takeActionSec: 'कार्रवाई करें', remarksLbl: 'विभाग की टिप्पणी', submitBtn: 'विवरण जमा करें',
+                    actionTitle: 'शिकायत पर कार्रवाई:', backBtn: '← डैशबोर्ड पर वापस',
+                    aggregationTitle: 'कार्यकारी कुल सारांश', aggregationDesc: 'राज्य विभागों में वास्तविक समय शिकायत सांख्यिकी।',
+                    loginTitle: 'विभाग आधिकारिक लॉगिन', loginSubtitle: 'सरकारी अधिकारियों के लिए सुरक्षित पहुंच', loginBtn: 'लॉगिन',
+                    filters: { all: 'सभी', pending: 'लंबित', progress: 'प्रगति में', resolved: 'समाधान किया गया' },
+                    noRecords: 'इस फ़िल्टर के लिए कोई रिकॉर्ड नहीं मिला।',
+                    descLbl: 'विवरण',
+                    deptIdLbl: 'विभाग आईडी', officerUser: 'अधिकारी उपयोगकर्ता नाम', passLbl: 'पासवर्ड',
+                    mgmtStats: 'प्रबंधन सांख्यिकी', totalComplaints: 'कुल शिकायतें',
+                    deptName: 'विभाग का नाम', complaintCount: 'शिकायत संख्या', liveStatus: 'लाइव स्थिति', activeMonitoring: 'सक्रिय निगरानी'
+                },
+                modal: { details: 'शिकायत विवरण', compId: 'शिकायत आईडी', status: 'स्थिति', desc: 'विवरण', appDetails: 'आवेदक विवरण', name: 'पूरा नाम', aadhar: 'आधार संख्या', mobile: 'मोबाइल', location: 'स्थान', urgency: 'जल्दबाजी', date: 'जमा करने की तिथि', close: 'बंद करें' }
+            }
+        };
+
+
+        // --- HELPER COMPONENTS ---
+
+        // Searchable Select Component (Autocomplete)
+        const SearchableSelect = ({ options, value, onChange, placeholder }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [searchTerm, setSearchTerm] = useState('');
+
+            const filteredOptions = options.filter(opt =>
+                opt.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            useEffect(() => {
+                if (value && options.includes(value)) setSearchTerm('');
+            }, [value]);
+
+            return (
+                <div style={{ position: 'relative' }}>
+                    <div
+                        onClick={() => setIsOpen(!isOpen)}
+                        style={{
+                            width: '100%', padding: '0.75rem', borderRadius: '0.5rem',
+                            background: '#f8fafc', border: '1px solid #e2e8f0', color: value ? 'black' : '#94a3b8',
+                            cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                        }}
+                    >
+                        {value || placeholder}
+
+                    </div>
+
+                    {isOpen && (
+                        <div style={{
+                            position: 'absolute', top: '100%', left: 0, right: 0,
+                            background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem',
+                            marginTop: '0.25rem', maxHeight: '200px', overflowY: 'auto', zIndex: 50,
+                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                        }}>
+                            <input
+                                type="text"
+                                placeholder="Type to search..."
+                                autoFocus
+                                style={{
+                                    width: '100%', padding: '0.5rem', border: 'none', borderBottom: '1px solid #eee',
+                                    outline: 'none', background: '#f9f9f9', fontSize: '0.9rem'
+                                }}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            {filteredOptions.length > 0 ? (
+                                filteredOptions.map(opt => (
+                                    <div
+                                        key={opt}
+                                        onClick={() => { onChange(opt); setIsOpen(false); setSearchTerm(''); }}
+                                        style={{
+                                            padding: '0.5rem 0.75rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
+                                            fontSize: '0.9rem', color: 'black'
+                                        }}
+                                        onMouseEnter={(e) => e.target.style.background = '#f1f5f9'}
+                                        onMouseLeave={(e) => e.target.style.background = 'white'}
+                                    >
+                                        {opt}
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ padding: '0.5rem', color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center' }}>No results</div>
+                            )}
+                        </div>
+                    )}
+                    {isOpen && <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40 }} onClick={() => setIsOpen(false)} />}
+                </div>
+            );
+        };
+
+        // --- COMPONENTS ---
+
+        // 1. Header
+        function Header({ onNavigate, isScrolled, language, setLanguage, isRegistered, onLogout }) {
+            const [scrolled, setScrolled] = useState(false);
+            const t = TEXT[language].nav;
+
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    setScrolled(window.scrollY > 20);
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const handleClick = (page) => (e) => {
+                e.preventDefault();
+                onNavigate(page);
+            }
+
+            const linkStyle = {
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                color: 'var(--color-text-main)',
+                cursor: 'pointer'
+            };
+
+            return (
+                <header
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        zIndex: 50,
+                        transition: 'all 0.3s ease',
+                        padding: scrolled || isScrolled ? '1rem 0' : '1.5rem 0',
+                        background: scrolled || isScrolled ? 'rgba(255, 255, 255, 0.9)' : 'transparent',
+                        backdropFilter: scrolled || isScrolled ? 'blur(12px)' : 'none',
+                        borderBottom: scrolled || isScrolled ? '1px solid rgba(0,0,0,0.05)' : 'none',
+                        boxShadow: scrolled || isScrolled ? '0 4px 6px -1px rgba(0,0,0,0.05)' : 'none'
+                    }}
+                >
+                    <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        {/* LEFT: Logo */}
+                        <a href="/" onClick={handleClick('home')} style={{ fontSize: '1.5rem', fontWeight: '800', letterSpacing: '-0.025em', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'black' }}>
+                            <div style={{ width: '2rem', height: '2rem', background: 'linear-gradient(135deg, #8b5cf6, #ec4899)', borderRadius: '8px' }}></div>
+                            CivicSense
+                        </a>
+
+                        {/* RIGHT: Navigation Items */}
+                        <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <select
+                                    value={language}
+                                    onChange={(e) => setLanguage(e.target.value)}
+                                    style={{
+                                        appearance: 'none',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        fontSize: '0.95rem',
+                                        fontWeight: '500',
+                                        cursor: 'pointer',
+                                        paddingRight: '1.2rem',
+                                        outline: 'none',
+                                        color: 'var(--color-text-main)'
+                                    }}
+                                >
+                                    <option value="English">English</option>
+                                    <option value="Tamil">தமிழ் (Tamil)</option>
+                                    <option value="Hindi">हिंदी (Hindi)</option>
+                                </select>
+                                <span style={{ position: 'absolute', right: 0, pointerEvents: 'none', fontSize: '0.8rem' }}>▼</span>
+                            </div>
+
+                            <a href="#" onClick={handleClick('home')} style={linkStyle}>{t.home}</a>
+                            {isRegistered && <a href="#" onClick={handleClick('dashboard')} style={linkStyle}>{t.dashboard}</a>}
+
+                            <a href="#" onClick={handleClick('services')} style={linkStyle}>{t.services}</a>
+
+                            <a href="#" onClick={handleClick('help')} style={linkStyle}>{t.help}</a>
+
+                            {isRegistered && (
+                                <button
+                                    onClick={onLogout}
+                                    className="btn btn-outline"
+                                    style={{ marginLeft: '1rem', padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                                >
+                                    Logout
+                                </button>
+                            )}
+
+                            {!isRegistered && (
+                                <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                                    <a href="#" onClick={handleClick('state-summary')} style={linkStyle}>{t.stateSummary}</a>
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} className="departments-container">
+                                        <span style={{ cursor: 'pointer', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.25rem' }} onClick={() => document.getElementById('dept-menu').classList.toggle('hidden')}>
+                                            {t.officials}
+                                        </span>
+                                        <div id="dept-menu" className="hidden glass" style={{
+                                            position: 'absolute', top: '100%', right: 0,
+                                            background: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem',
+                                            marginTop: '0.5rem', minWidth: '240px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                                            display: 'none', flexDirection: 'column', zIndex: 100
+                                        }}>
+                                            {TEXT[language].services.depts.map((dept, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    onClick={() => {
+                                                        const deptIds = ['DEPT-WATER', 'DEPT-ELECTRIC', 'DEPT-WELFARE', 'DEPT-REVENUE', 'DEPT-TRANSPORT'];
+                                                        onNavigate('dept-login', deptIds[idx]);
+                                                        document.getElementById('dept-menu').classList.add('hidden');
+                                                    }}
+                                                    style={{ padding: '0.75rem 1rem', fontSize: '0.9rem', color: '#1e293b', fontWeight: '500', cursor: 'pointer', transition: 'background 0.2s' }}
+                                                    onMouseEnter={(e) => e.target.style.background = '#f1f5f9'}
+                                                    onMouseLeave={(e) => e.target.style.background = 'white'}
+                                                >
+                                                    {dept.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <style>{`
+                                                    .hidden { display: none !important; }
+                                                    #dept-menu:not(.hidden), #auth-menu:not(.hidden) { display: flex !important; }
+                                                `}</style>
+                        </nav>
+                    </div>
+                </header>
+            );
+        }
+
+        // 2. Hero
+        function Hero({ language }) {
+            const t = TEXT[language].hero;
+            return (
+                <section style={{
+                    paddingTop: '8rem',
+                    paddingBottom: '6rem',
+                    minHeight: '90vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: '20%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '600px',
+                        height: '600px',
+                        background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
+                        zIndex: -1,
+                        pointerEvents: 'none'
+                    }}></div>
+
+                    <div className="container" style={{ textAlign: 'center', maxWidth: '800px' }}>
+
+
+                        <h1 style={{
+                            fontSize: '3.5rem',
+                            fontWeight: '800',
+                            lineHeight: '1.1',
+                            marginBottom: '1.5rem',
+                            letterSpacing: '-0.03em'
+                        }}>
+                            {t.title1}<br />
+                            <span className="text-gradient">{t.title2}</span>
+                        </h1>
+
+                        <p style={{
+                            fontSize: '1.125rem',
+                            color: 'var(--color-text-muted)',
+                            marginBottom: '2.5rem',
+                            lineHeight: '1.6',
+                            maxWidth: '600px',
+                            marginLeft: 'auto',
+                            marginRight: 'auto'
+                        }}>
+                            {t.desc}
+                        </p>
+
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <button
+                                className="btn btn-primary"
+                                style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}
+                                onClick={() => document.dispatchEvent(new CustomEvent('open-grievance'))}
+                            >
+                                {t.btnReport}
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        // 3. Features
+        const FeatureCard = ({ title, description, icon }) => (
+            <div className="glass" style={{
+                padding: '2rem',
+                borderRadius: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                transition: 'transform 0.3s ease',
+            }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+                <div style={{
+                    width: '3.5rem',
+                    height: '3.5rem',
+                    borderRadius: '1rem',
+                    background: 'rgba(139, 92, 246, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.75rem',
+                    marginBottom: '0.5rem',
+                    color: '#7c3aed'
+                }}>
+                    {icon}
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600' }}>{title}</h3>
+                <p style={{ color: 'var(--color-text-muted)', lineHeight: '1.6' }}>{description}</p>
+            </div>
+        );
+
+        function Features({ language }) {
+            const t = TEXT[language].features;
+            const features = [
+                {
+                    title: t.items[0].title,
+                    description: t.items[0].desc,
+                    icon: 'AI'
+                },
+                {
+                    title: t.items[1].title,
+                    description: t.items[1].desc,
+                    icon: 'LT'
+                },
+                {
+                    title: t.items[2].title,
+                    description: t.items[2].desc,
+                    icon: 'WM'
+                }
+            ];
+
+            return (
+                <section className="section">
+                    <div className="container">
+                        <div style={{ marginBottom: '4rem', textAlign: 'center' }}>
+                            <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '1rem' }}>{t.mainTitle}</h2>
+                            <p style={{ color: 'var(--color-text-muted)', maxWidth: '600px', margin: '0 auto' }}>
+                                {t.mainDesc}
+                            </p>
+                        </div>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                            gap: '2rem'
+                        }}>
+                            {features.map((f, i) => <FeatureCard key={i} {...f} />)}
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        // 4. Services
+        function Services({ language }) {
+            const [activeIdx, setActiveIdx] = useState(null);
+            const t = TEXT[language].services;
+
+            const departmentServices = [
+                { name: t.depts[0].name, icon: '🚰', color: '#0ea5e9', services: t.depts[0].services },
+                { name: t.depts[1].name, icon: '⚡', color: '#f59e0b', services: t.depts[1].services },
+                { name: t.depts[2].name, icon: '👥', color: '#10b981', services: t.depts[2].services },
+                { name: t.depts[3].name, icon: '🧾', color: '#6366f1', services: t.depts[3].services },
+                { name: t.depts[4].name, icon: '🚗', color: '#ec4899', services: t.depts[4].services }
+            ];
+
+            return (
+                <section id="services" className="section" style={{ background: '#f8fafc' }}>
+                    <div className="container">
+                        <div style={{ marginBottom: '4rem', textAlign: 'center' }}>
+                            <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '1rem' }}>{t.mainTitle}</h2>
+                            <p style={{ color: 'var(--color-text-muted)', maxWidth: '600px', margin: '0 auto' }}>
+                                {t.mainDesc}
+                            </p>
+                        </div>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                            gap: '2rem'
+                        }}>
+                            {departmentServices.map((dept, idx) => (
+                                <div
+                                    key={idx}
+                                    className="glass"
+                                    onMouseEnter={() => setActiveIdx(idx)}
+                                    onMouseLeave={() => setActiveIdx(null)}
+                                    onClick={() => setActiveIdx(activeIdx === idx ? null : idx)}
+                                    style={{
+                                        padding: '2rem',
+                                        borderRadius: '1.5rem',
+                                        borderTop: `6px solid ${dept.color}`,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '1.5rem',
+                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                        transform: activeIdx === idx ? 'translateY(-10px)' : 'none',
+                                        boxShadow: activeIdx === idx ? '0 20px 25px -5px rgba(0,0,0,0.1)' : 'none',
+                                        cursor: 'pointer',
+                                        minHeight: '160px'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <div style={{
+                                            fontSize: '2rem',
+                                            background: activeIdx === idx ? dept.color : 'rgba(0,0,0,0.05)',
+                                            width: '4rem',
+                                            height: '4rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderRadius: '1rem',
+                                            transition: 'all 0.3s'
+                                        }}>
+                                            {dept.icon}
+                                        </div>
+                                        <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: activeIdx === idx ? dept.color : 'inherit' }}>{dept.name}</h3>
+                                    </div>
+
+                                    <div style={{
+                                        maxHeight: activeIdx === idx ? '500px' : '0',
+                                        overflow: 'hidden',
+                                        transition: 'all 0.5s ease-in-out',
+                                        opacity: activeIdx === idx ? 1 : 0
+                                    }}>
+                                        <ul style={{
+                                            listStyle: 'none',
+                                            padding: 0,
+                                            margin: 0,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '0.8rem',
+                                            paddingTop: '1rem',
+                                            borderTop: '1px solid #eee'
+                                        }}>
+                                            {dept.services.map((service, sIdx) => (
+                                                <li key={sIdx} style={{
+                                                    fontSize: '0.9rem',
+                                                    color: 'var(--color-text-muted)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.75rem',
+                                                    lineHeight: '1.4'
+                                                }}>
+                                                    <span style={{ color: dept.color, fontSize: '1.2rem' }}>•</span>
+                                                    {service}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {activeIdx !== idx && (
+                                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', marginTop: 'auto' }}>
+                                            {t.tapHint}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        // 5. Dashboard
+        const StatCard = ({ label, value, trend, color }) => (
+            <div className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', borderTop: `4px solid ${color}` }}>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{label}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
+                    <span style={{ fontSize: '2rem', fontWeight: '700' }}>{value}</span>
+                    <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: '500' }}>{trend}</span>
+                </div>
+            </div>
+        );
+
+        const ActivityItem = ({ type, title, time, status, onClick }) => (
+            <div onClick={onClick} style={{ display: 'flex', gap: '1rem', padding: '1rem', borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                <div style={{
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    {type === 'grievance' ? '(G)' : '(A)'}
+                </div>
+                <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '500' }}>{title}</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{time}</p>
+                </div>
+                <div style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem', borderRadius: '1rem', background: status === 'Resolved' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)', color: status === 'Resolved' ? '#34d399' : '#fbbf24', height: 'fit-content' }}>
+                    {status}
+                </div>
+            </div>
+        );
+
+        function Dashboard({ language, onLogout, onNewRequest }) {
+            const [grievances, setGrievances] = useState([]);
+            const [selectedGrievance, setSelectedGrievance] = useState(null);
+            const t = TEXT[language].dashboard;
+
+            useEffect(() => {
+                setGrievances(JSON.parse(localStorage.getItem('civic_grievances') || '[]'));
+            }, []);
+
+            return (
+                <section className="section" style={{ paddingTop: '8rem', minHeight: '100vh' }}>
+                    <div className="container">
+                        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h2 style={{ fontSize: '2rem', fontWeight: '700' }}>{t.title}</h2>
+                                <p style={{ color: 'var(--color-text-muted)' }}>{t.subtitle}</p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <button className="btn btn-outline" onClick={onLogout}>{t.logout}</button>
+                                <button className="btn btn-primary" onClick={() => document.dispatchEvent(new CustomEvent('open-grievance'))}>{t.newRequest}</button>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+                            <StatCard label={t.statGrievances} value={grievances.length} trend={t.trends.live} color="#3b82f6" />
+                            <StatCard label={t.statResolved} value="0" trend={t.trends.current} color="#10b981" />
+                            <StatCard label={t.statWelfare} value="2" trend={t.trends.profile} color="#f59e0b" />
+                        </div>
+
+                        <div className="glass" style={{ borderRadius: '1.5rem', padding: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1.5rem' }}>{t.reportedTitle}</h3>
+                            {grievances.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    {grievances.map(g => (
+                                        <ActivityItem
+                                            key={g.id}
+                                            type="grievance"
+                                            title={`${g.id}: ${g.description.substring(0, 50)}...`}
+                                            time={g.registrationDate}
+                                            status={g.status}
+                                            onClick={() => setSelectedGrievance(g)}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem' }}>{t.empty}</p>
+                            )}
+                        </div>
+                    </div>
+                    {selectedGrievance && <GrievanceDetailModal language={language} grievance={selectedGrievance} onClose={() => setSelectedGrievance(null)} />}
+                </section>
+            );
+        }
+
+        // --- DEPARTMENT DASHBOARD ---
+        function DepartmentDashboard({ language, deptId, onLogout, onToggleOverview }) {
+            const [grievances, setGrievances] = useState([]);
+            const [filter, setFilter] = useState('All');
+            const t = TEXT[language].official;
+
+            useEffect(() => {
+                const all = JSON.parse(localStorage.getItem('civic_grievances') || '[]');
+                setGrievances(all.filter(g => g.deptId === deptId));
+            }, [deptId]);
+
+            const sorted = [...grievances].sort((a, b) => {
+                const urgencyPriority = { 'High': 1, 'Medium': 2, 'Low': 3 };
+                const priorityA = urgencyPriority[a.severity] || 4;
+                const priorityB = urgencyPriority[b.severity] || 4;
+                if (priorityA !== priorityB) return priorityA - priorityB;
+                const dateA = new Date(a.rawTimestamp || a.registrationDate).setHours(0, 0, 0, 0);
+                const dateB = new Date(b.rawTimestamp || b.registrationDate).setHours(0, 0, 0, 0);
+                if (dateA !== dateB) return dateA - dateB;
+                return (a.rawTimestamp || 0) - (b.rawTimestamp || 0);
+            });
+
+            return (
+                <section className="section" style={{ paddingTop: '8rem', minHeight: '100vh', background: '#f8fafc' }}>
+                    <div className="container">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+                            <div>
+                                <h1 style={{ fontSize: '2rem', fontWeight: '800' }}>{t.portalTitle} {deptId.replace('DEPT-', '')}</h1>
+                                <p style={{ color: '#64748b' }}>{t.portalSubtitle}</p>
+                            </div>
+                            <button className="btn btn-outline" onClick={onLogout}>{t.logout}</button>
+                        </div>
+
+                        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: 'white' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>{t.queueTitle} ({grievances.length})</h2>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    {[
+                                        { id: 'All', label: t.filters.all },
+                                        { id: 'Pending', label: t.filters.pending },
+                                        { id: 'In Progress', label: t.filters.progress },
+                                        { id: 'Resolved', label: t.filters.resolved }
+                                    ].map(f => (
+                                        <button
+                                            key={f.id}
+                                            onClick={() => setFilter(f.id)}
+                                            style={{
+                                                fontSize: '0.75rem',
+                                                padding: '0.3rem 0.8rem',
+                                                borderRadius: '99px',
+                                                background: filter === f.id ? '#7c3aed' : 'white',
+                                                color: filter === f.id ? 'white' : '#64748b',
+                                                border: '1px solid #e2e8f0'
+                                            }}
+                                        >
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                                {sorted.filter(g => filter === 'All' || g.status === filter).map(g => (
+                                    <div key={g.id} className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', borderTop: g.severity === 'High' ? '4px solid #ef4444' : 'none', cursor: 'pointer' }} onClick={() => onToggleOverview(g)}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#7c3aed' }}>{g.id}</span>
+                                            <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: g.severity === 'High' ? '#fee2e2' : '#f1f5f9', color: g.severity === 'High' ? '#ef4444' : '#64748b' }}>{g.severity.toUpperCase()}</span>
+                                        </div>
+                                        <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{g.description.substring(0, 100)}...</h3>
+                                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+                                            <span>📍 {g.village}, {g.district}</span>
+                                            <span style={{ fontWeight: '600', color: 'var(--color-text-main)' }}>📅 {t.registeredDate}: {g.registrationDate}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', marginBottom: '1rem' }}>
+                                            {g.isMerged && <span style={{ color: '#10b981', fontWeight: '600' }}>Merged ({g.repeatCount} submissions)</span>}
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
+                                            <div style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', borderRadius: '0.4rem', background: g.status === 'Resolved' ? '#dcfce7' : '#fef9c3', color: g.status === 'Resolved' ? '#166534' : '#854d0e', fontWeight: '600' }}>
+                                                {t.statusLbl}: {g.status}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {sorted.filter(g => filter === 'All' || g.status === filter).length === 0 && (
+                                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
+                                        {t.noRecords}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        // --- NEW GRIEVANCE ACTION PAGE ---
+        function GrievanceActionPage({ language, grievance, onBack, onUpdate }) {
+            const [remarks, setRemarks] = useState(grievance.remarks || '');
+            const [status, setStatus] = useState(grievance.status);
+            const t = TEXT[language].official;
+
+            const handleSave = () => {
+                const all = JSON.parse(localStorage.getItem('civic_grievances') || '[]');
+                const updated = all.map(g => g.id === grievance.id ? { ...g, status, remarks } : g);
+                localStorage.setItem('civic_grievances', JSON.stringify(updated));
+                alert('Action Updated Successfully');
+                onUpdate();
+                onBack();
+            };
+
+            return (
+                <section className="section" style={{ paddingTop: '8rem', minHeight: '100vh', background: '#f8fafc' }}>
+                    <div className="container" style={{ maxWidth: '900px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                            <button onClick={onBack} className="btn btn-outline" style={{ padding: '0.5rem 1rem' }}>{t.backBtn}</button>
+                            <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>{t.actionTitle} {grievance.id}</h1>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+                            <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: 'white' }}>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '0.75rem' }}>{t.detailsSec}</h3>
+
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t.descLbl}</label>
+                                    <p style={{ fontSize: '1.1rem', lineHeight: '1.7', marginTop: '0.5rem', color: '#1e293b' }}>{grievance.description}</p>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase' }}>{t.registeredDate}</label>
+                                        <p style={{ fontWeight: '600', marginTop: '0.25rem' }}>{grievance.registrationDate}</p>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase' }}>{t.urgencyLbl}</label>
+                                        <p style={{ fontWeight: '800', marginTop: '0.25rem', color: grievance.severity === 'High' ? '#ef4444' : '#64748b' }}>{grievance.severity}</p>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase' }}>{t.deptLbl}</label>
+                                        <p style={{ fontWeight: '600', marginTop: '0.25rem' }}>{grievance.category}</p>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase' }}>{t.locationLbl}</label>
+                                        <p style={{ fontWeight: '600', marginTop: '0.25rem' }}>{grievance.village}, {grievance.district}</p>
+                                    </div>
+                                </div>
+
+                                {grievance.evidence && (
+                                    <div style={{ marginTop: '2rem' }}>
+                                        <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase' }}>{t.evidenceLbl}</label>
+                                        <div style={{ marginTop: '1rem', padding: '1rem', border: '2px dashed #e2e8f0', borderRadius: '1rem', textAlign: 'center', color: '#64748b' }}>
+                                            📷 Evidence Image Attached
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: 'white' }}>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>{t.applicantSec}</h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: '#64748b' }}>Full Name</p>
+                                            <p style={{ fontWeight: '600' }}>{grievance.name}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: '#64748b' }}>Mobile Number</p>
+                                            <p style={{ fontWeight: '600' }}>{grievance.mobile}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.75rem', color: '#64748b' }}>Aadhar Number</p>
+                                            <p style={{ fontWeight: '600' }}>{grievance.citizenId}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: 'white', border: '2px solid #7c3aed' }}>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>{t.takeActionSec}</h3>
+
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#475569' }}>{t.statusLbl}</label>
+                                        <select
+                                            value={status}
+                                            onChange={(e) => setStatus(e.target.value)}
+                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', background: '#f8fafc' }}
+                                        >
+                                            <option value="Pending">Pending</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Resolved">Resolved</option>
+                                        </select>
+                                    </div>
+
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#475569' }}>{t.remarksLbl}</label>
+                                        <textarea
+                                            placeholder="Enter details of action taken..."
+                                            rows="4"
+                                            value={remarks}
+                                            onChange={(e) => setRemarks(e.target.value)}
+                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', background: '#f8fafc', resize: 'none' }}
+                                        ></textarea>
+                                    </div>
+
+                                    <button onClick={handleSave} className="btn btn-primary" style={{ width: '100%' }}>{t.submitBtn}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        // --- PRIVATE AGGREGATION DASHBOARD ---
+        // --- PRIVATE AGGREGATION DASHBOARD ---
+        function AggregationDashboard({ language, onBack }) {
+            const [counts, setCounts] = useState({});
+            const s = TEXT[language].services;
+            const t = TEXT[language].official;
+
+            useEffect(() => {
+                const all = JSON.parse(localStorage.getItem('civic_grievances') || '[]');
+                const newCounts = all.reduce((acc, g) => {
+                    acc[g.deptId] = (acc[g.deptId] || 0) + 1;
+                    return acc;
+                }, {});
+                setCounts(newCounts);
+            }, []);
+
+            const depts = [
+                { name: s.depts[0].name, id: 'DEPT-WATER', icon: '🚰' },
+                { name: s.depts[1].name, id: 'DEPT-ELECTRIC', icon: '⚡' },
+                { name: s.depts[2].name, id: 'DEPT-WELFARE', icon: '👥' },
+                { name: s.depts[3].name, id: 'DEPT-REVENUE', icon: '🏢' },
+                { name: s.depts[4].name, id: 'DEPT-TRANSPORT', icon: '🚌' }
+            ];
+
+            return (
+                <section className="section" style={{ paddingTop: '8rem', minHeight: '100vh', background: '#f8fafc' }}>
+                    <div className="container" style={{ maxWidth: '1000px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+                            <div>
+                                <h1 style={{ fontSize: '2.5rem', fontWeight: '800' }}>{t.aggregationTitle || 'Executive Summary'}</h1>
+                                <p style={{ color: 'var(--color-text-muted)' }}>{t.aggregationDesc || 'Real-time grievance statistics across state departments.'}</p>
+                            </div>
+                            <button onClick={onBack} className="btn btn-outline">{t.backBtn}</button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+                            {depts.map(dept => (
+                                <div key={dept.id} className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', textAlign: 'center', background: 'white' }}>
+                                    <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{dept.icon}</div>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>{dept.name}</h3>
+                                    <div style={{ fontSize: '3rem', fontWeight: '800', color: '#7c3aed' }}>{counts[dept.id] || 0}</div>
+                                    <p style={{ fontSize: '0.9rem', color: '#64748b' }}>{t.totalComplaints}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="glass" style={{ marginTop: '4rem', padding: '2rem', borderRadius: '1.5rem', background: 'white' }}>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>{t.mgmtStats}</h3>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                                        <th style={{ padding: '1.25rem 1rem', color: '#64748b' }}>{t.deptName}</th>
+                                        <th style={{ padding: '1.25rem 1rem', color: '#64748b', textAlign: 'center' }}>{t.complaintCount}</th>
+                                        <th style={{ padding: '1.25rem 1rem', color: '#64748b', textAlign: 'center' }}>{t.liveStatus}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {depts.map(dept => (
+                                        <tr key={dept.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                            <td style={{ padding: '1.25rem 1rem', fontWeight: '600', color: '#1e293b' }}>{dept.name}</td>
+                                            <td style={{ padding: '1.25rem 1rem', textAlign: 'center', fontSize: '1.5rem', fontWeight: '800', color: '#7c3aed' }}>{counts[dept.id] || 0}</td>
+                                            <td style={{ padding: '1.25rem 1rem', textAlign: 'center' }}>
+                                                <span style={{ fontSize: '0.75rem', padding: '0.3rem 0.8rem', borderRadius: '99px', background: '#f0fdf4', color: '#16a34a', fontWeight: '600', border: '1px solid #dcfce7' }}>
+                                                    {t.activeMonitoring}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        // 5. Help Modal
+        // 5. Help Modal
+        function HelpModal({ onClose, language }) {
+            const t = TEXT[language].helpModal;
+            return (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)', zIndex: 110,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+                }}>
+                    <div className="glass" style={{
+                        width: '100%', maxWidth: '500px', background: 'white',
+                        borderRadius: '1.5rem', padding: '2rem',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>{t.title}</h2>
+                            <button onClick={onClose} style={{ fontSize: '1.5rem', color: '#64748b' }}>&times;</button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            <div>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#7c3aed', marginBottom: '0.5rem' }}>{t.sec1Title}</h3>
+                                <p style={{ color: '#475569', fontSize: '0.95rem' }}>{t.sec1Desc}</p>
+                            </div>
+
+                            <div>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#7c3aed', marginBottom: '0.5rem' }}>{t.sec2Title}</h3>
+                                <p style={{ color: '#475569', fontSize: '0.95rem' }}>{t.sec2Desc}</p>
+                            </div>
+
+                            <div>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#7c3aed', marginBottom: '0.5rem' }}>{t.sec3Title}</h3>
+                                <p style={{ color: '#475569', fontSize: '0.95rem' }}>{t.sec3Desc}</p>
+                            </div>
+                        </div>
+
+                        <button onClick={onClose} className="btn btn-primary" style={{ width: '100%', marginTop: '2rem' }}>{t.btn}</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // 7. Department Login
+        function DepartmentLogin({ language, onLogin, onBack }) {
+            const [deptId, setDeptId] = useState('');
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const t = TEXT[language].official;
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (deptId && username && password) {
+                    alert(`Login Successful for Department ID: ${deptId}`);
+                    onLogin();
+                } else {
+                    alert('Please fill all fields');
+                }
+            };
+
+            return (
+                <section style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
+                    <div className="glass" style={{ width: '100%', maxWidth: '450px', padding: '2.5rem', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', position: 'relative' }}>
+
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ width: '3rem', height: '3rem', background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', borderRadius: '12px', margin: '0 auto 1rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}></div>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>{t.loginTitle}</h2>
+                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>{t.loginSubtitle}</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: '#475569' }}>{t.deptIdLbl}</label>
+                                <input type="text" placeholder="e.g., DEPT-001" required
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', outline: 'none' }}
+                                    value={deptId} onChange={e => setDeptId(e.target.value)} />
+                            </div>
+
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: '#475569' }}>{t.officerUser}</label>
+                                <input type="text" placeholder="Officer Name" required
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', outline: 'none' }}
+                                    value={username} onChange={e => setUsername(e.target.value)} />
+                            </div>
+
+                            <div style={{ marginBottom: '2rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: '#475569' }}>{t.passLbl}</label>
+                                <input type="password" placeholder="••••••••" required
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', outline: 'none' }}
+                                    value={password} onChange={e => setPassword(e.target.value)} />
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginBottom: '1rem' }}>{t.loginBtn}</button>
+                            <button type="button" onClick={onBack} className="btn" style={{ width: '100%', border: '1px solid #e2e8f0', color: '#64748b' }}>{t.backBtn}</button>
+                        </form>
+                    </div>
+                </section>
+            );
+        }
+
+        // --- GRIEVANCE DETAIL MODAL ---
+        const GrievanceDetailModal = ({ language, grievance, onClose }) => {
+            if (!grievance) return null;
+            const t = TEXT[language].modal;
+            return (
+                <div className="modal-overlay" style={{ zIndex: 101 }}>
+                    <div className="modal-content glass" style={{ maxWidth: '600px', width: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t.details}</h2>
+                            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div>
+                                <h4 style={{ color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t.compId}</h4>
+                                <p style={{ fontWeight: '700' }}>{grievance.id}</p>
+                            </div>
+                            <div>
+                                <h4 style={{ color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t.status}</h4>
+                                <p style={{ fontWeight: '700' }}>{grievance.status}</p>
+                            </div>
+
+                            <div style={{ gridColumn: 'span 2' }}>
+                                <h4 style={{ color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t.desc}</h4>
+                                <p style={{ lineHeight: '1.6' }}>{grievance.description}</p>
+                            </div>
+
+                            <div style={{ gridColumn: 'span 2', background: '#f8fafc', padding: '1rem', borderRadius: '0.75rem' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem' }}>{t.appDetails}</h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <h4 style={{ fontSize: '0.75rem', color: '#64748b' }}>{t.name}</h4>
+                                        <p style={{ fontWeight: '500' }}>{grievance.name}</p>
+                                    </div>
+                                    <div>
+                                        <h4 style={{ fontSize: '0.75rem', color: '#64748b' }}>{t.aadhar}</h4>
+                                        <p style={{ fontWeight: '500' }}>{grievance.citizenId}</p>
+                                    </div>
+                                    <div>
+                                        <h4 style={{ fontSize: '0.75rem', color: '#64748b' }}>{t.mobile}</h4>
+                                        <p style={{ fontWeight: '500' }}>{grievance.mobile}</p>
+                                    </div>
+                                    <div>
+                                        <h4 style={{ fontSize: '0.75rem', color: '#64748b' }}>{t.location}</h4>
+                                        <p style={{ fontWeight: '500' }}>{grievance.village}, {grievance.district}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style={{ color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t.urgency}</h4>
+                                <p style={{ fontWeight: '700', color: grievance.severity === 'High' ? '#ef4444' : '#64748b' }}>{grievance.severity}</p>
+                            </div>
+                            <div>
+                                <h4 style={{ color: 'var(--color-primary)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{t.date}</h4>
+                                <p style={{ fontWeight: '500' }}>{grievance.registrationDate}</p>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+                            <button onClick={onClose} className="btn btn-primary">{t.close}</button>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+
+        function GrievanceAIForm({ onClose, language, onRegistered }) {
+            const t = TEXT[language].form;
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [submitted, setSubmitted] = useState(false);
+
+            // Verification State
+            const [verified, setVerified] = useState(false);
+            const [otpSent, setOtpSent] = useState(false);
+            const [otp, setOtp] = useState('');
+
+            // AI Analysis State
+            const [aiAnalysis, setAiAnalysis] = useState(null);
+
+            const [formData, setFormData] = useState({
+                name: '',
+                aadhar: '',
+                mobile: '',
+                district: '',
+                taluk: '',
+                village: '',
+                pincode: '',
+                description: '',
+                category: '', // This will be set by AI
+                evidence: null
+            });
+
+            // Comprehensive Tamil Nadu Data (Mock but representative)
+            const districts = [
+                'Ariyalur', 'Chengalpattu', 'Chennai', 'Coimbatore', 'Cuddalore', 'Dharmapuri', 'Dindigul', 'Erode',
+                'Kallakurichi', 'Kancheepuram', 'Karur', 'Krishnagiri', 'Madurai', 'Mayiladuthurai', 'Nagapattinam',
+                'Namakkal', 'Nilgiris', 'Perambalur', 'Pudukkottai', 'Ramanathapuram', 'Ranipet', 'Salem',
+                'Sivaganga', 'Tenkasi', 'Thanjavur', 'Theni', 'Thoothukudi', 'Tiruchirappalli', 'Tirunelveli',
+                'Tirupathur', 'Tiruppur', 'Tiruvallur', 'Tiruvannamalai', 'Tiruvarur', 'Vellore', 'Viluppuram',
+                'Virudhunagar'
+            ];
+
+            // Simplified Mapping for Demo (In a real app, this would be a full JSON or API fetch)
+            const taluks = [
+                'Alandur', 'Ambattur', 'Aminjikarai', 'Ayanavaram', 'Egmore', 'Guindy', 'Madhavaram', 'Maduravoyal', 'Mambalam',
+                'Mylapore', 'Perambur', 'Purasawalkam', 'Sholinganallur', 'Thiruvottiyur', 'Tondiarpet', 'Velachery', // Chennai
+                'Coimbatore North', 'Coimbatore South', 'Pollachi', 'Mettupalayam', 'Sulur', 'Valparai', // Coimbatore
+                'Madurai East', 'Madurai North', 'Madurai South', 'Madurai West', 'Melur', 'Thiruparankundram', 'Usilampatti', // Madurai
+                'Lalgudi', 'Manachanallur', 'Musiri', 'Srirangam', 'Thottiyam', 'Thuraiyur', 'Tiruchirappalli East', 'Tiruchirappalli West', // Trichy
+                'Attur', 'Edappadi', 'Gangavalli', 'Mettur', 'Omalur', 'Salem', 'Salem South', 'Salem West', 'Sankari', 'Vazhapadi', 'Yercaud' // Salem
+                // ... (would include all 200+ taluks in production) ...
+            ];
+
+            const villages = [
+                'Adyar', 'Anna Nagar', 'Ashok Nagar', 'Besant Nagar', 'Chromepet', 'Egmore', 'Guindy', 'K.K. Nagar',
+                'Kodambakkam', 'Mylapore', 'Nungambakkam', 'Pallavaram', 'Perambur', 'Royapettah', 'Saidapet', 'T. Nagar',
+                'Tambaram', 'Thiruvanmiyur', 'Vadapalani', 'Velachery', 'Virugambakkam', 'Washermanpet', 'West Mambalam',
+                'Ganapathy', 'Peelamedu', 'R.S. Puram', 'Singanallur', 'Ukkadam', 'Gandhipuram', 'Saravanampatti',
+                'Anna Nagar (Madurai)', 'K.K. Nagar (Madurai)', 'Simmakkal', 'Tallakulam', 'TVS Nagar'
+                // ... (Listing 18,213 villages is not feasible in a single file client-side variable. This is a representative subset.)
+            ];
+
+            // Advanced AI Logic - Semantic Analysis Simulation
+            useEffect(() => {
+                if (formData.description.length > 5) {
+                    const timer = setTimeout(() => {
+                        const desc = formData.description.toLowerCase();
+                        let category = 'General';
+                        let urgency = 'Low';
+                        let confidence = 0.70; // Semantic default confidence
+                        // 1. Semantic Assessment (NLP Simulation) - Analyzes severity, impact, and criticality
+                        const isVulnerable = desc.includes('elderly') || desc.includes('child') || desc.includes('disabled') || desc.includes('senior') || desc.includes('pregnant') || desc.includes('old age') || desc.includes('infant');
+                        const isHighIntensity = desc.includes('!') || desc.includes('emergency') || desc.includes('immediately') || desc.includes('critical') || desc.includes('danger') || desc.includes('urgent') || desc.includes('asap');
+                        const hasSafetyRisk = desc.includes('fire') || desc.includes('accident') || desc.includes('hazard') || desc.includes('risk') || desc.includes('shock') || desc.includes('injury') || desc.includes('death') || desc.includes('blood') || desc.includes('collapsed');
+
+                        let score = 0;
+                        if (hasSafetyRisk) score += 5;
+                        if (isVulnerable) score += 3;
+                        if (isHighIntensity) score += 2;
+                        if (desc.includes('completely') || desc.includes('total') || desc.includes('no water') || desc.includes('no power')) score += 2; // Impact depth
+                        if (desc.length > 200) score += 1;
+
+                        if (score >= 6) urgency = 'High';
+                        else if (score >= 3) urgency = 'Medium';
+
+                        confidence = (0.75 + (score * 0.02)).toFixed(2);
+
+                        // 2. Department Routing (Semantic Prediction)
+                        if (desc.includes('water') || desc.includes('leakage') || desc.includes('drinking') || desc.includes('pipe') || desc.includes('sewage')) {
+                            category = 'Water Supply Department';
+                        } else if (desc.includes('power') || desc.includes('cut') || desc.includes('transformer') || desc.includes('electricity') || desc.includes('light')) {
+                            category = 'Tamil Nadu Electricity Board';
+                        } else if (desc.includes('pension') || desc.includes('ration') || desc.includes('widow') || desc.includes('support') || desc.includes('disability') || desc.includes('scheme')) {
+                            category = 'Social Welfare Department';
+                        } else if (desc.includes('land') || desc.includes('patta') || desc.includes('income') || desc.includes('revenue') || desc.includes('certificate')) {
+                            category = 'Revenue Department';
+                        } else if (desc.includes('bus') || desc.includes('transport') || desc.includes('road') || desc.includes('vehicle') || desc.includes('traffic')) {
+                            category = 'Transport Department';
+                        }
+
+                        setAiAnalysis({ category, urgency, confidence });
+                        setFormData(prev => ({ ...prev, category }));
+                    }, 800);
+                    return () => clearTimeout(timer);
+                }
+            }, [formData.description]);
+
+            const handleSendOtp = () => {
+                if (formData.mobile.length === 10) {
+                    setOtpSent(true);
+                    alert(`OTP Sent to ${formData.mobile}: 1234 (Mock)`);
+                } else {
+                    alert('Please enter a valid 10-digit mobile number.');
+                }
+            };
+
+            const handleVerifyOtp = () => {
+                if (otp === '1234') {
+                    setVerified(true);
+                } else {
+                    alert('Invalid OTP');
+                }
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+
+                const now = new Date();
+                const newGrievance = {
+                    id: `GRV-${Date.now().toString().slice(-6)}`,
+                    citizenId: formData.aadhar,
+                    ...formData,
+                    status: 'Pending',
+                    registrationDate: now.toLocaleString(),
+                    rawTimestamp: now.getTime(),
+                    urgency: aiAnalysis?.urgency || 'Low',
+                    severity: aiAnalysis?.urgency || 'Low', // Internal Priority
+                    confidence: aiAnalysis?.confidence || '0.70',
+                    isMerged: false,
+                    repeatCount: 1,
+                    deptId: aiAnalysis?.category === 'Water Supply Department' ? 'DEPT-WATER' :
+                        aiAnalysis?.category === 'Tamil Nadu Electricity Board' ? 'DEPT-ELECTRIC' :
+                            aiAnalysis?.category === 'Social Welfare Department' ? 'DEPT-WELFARE' :
+                                aiAnalysis?.category === 'Revenue Department' ? 'DEPT-REVENUE' :
+                                    aiAnalysis?.category === 'Transport Department' ? 'DEPT-TRANSPORT' : 'DEPT-GEN'
+                };
+
+                const existing = JSON.parse(localStorage.getItem('civic_grievances') || '[]');
+                const duplicateIndex = existing.findIndex(g =>
+                    g.citizenId === newGrievance.citizenId &&
+                    g.deptId === newGrievance.deptId &&
+                    (g.description.substring(0, 30) === newGrievance.description.substring(0, 30) || descSimilar(g.description, newGrievance.description))
+                );
+
+                if (duplicateIndex !== -1) {
+                    existing[duplicateIndex].repeatCount += 1;
+                    existing[duplicateIndex].isMerged = true;
+                    existing[duplicateIndex].registrationDate = newGrievance.registrationDate; // Track latest
+                    alert("System detected a repeated complaint. Merging with your previous submission.");
+                } else {
+                    existing.unshift(newGrievance);
+                }
+
+                localStorage.setItem('civic_grievances', JSON.stringify(existing));
+
+                setTimeout(() => {
+                    setIsSubmitting(false);
+                    setSubmitted(true);
+                    if (onRegistered) onRegistered();
+                }, 1500);
+            };
+
+            const descSimilar = (d1, d2) => {
+                const words1 = d1.toLowerCase().split(' ');
+                const words2 = d2.toLowerCase().split(' ');
+                const intersection = words1.filter(w => words2.includes(w));
+                return intersection.length / Math.max(words1.length, words2.length) > 0.5;
+            };
+
+            const handleFileChange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    setFormData({ ...formData, evidence: file });
+                    // Simulated AI Image Analysis
+                    setTimeout(() => {
+                        const fileName = file.name.toLowerCase();
+                        if (fileName.includes('pothole') || fileName.includes('road')) {
+                            setFormData(prev => ({ ...prev, description: prev.description + " [AI detected: Road damage issues]" }));
+                        } else if (fileName.includes('leak') || fileName.includes('water')) {
+                            setFormData(prev => ({ ...prev, description: prev.description + " [AI detected: Water supply issues]" }));
+                        }
+                    }, 1000);
+                }
+            };
+
+            const inputStyle = { width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', color: 'black', outline: 'none' };
+
+            return (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)', zIndex: 100,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+                }}>
+                    <div className="glass" style={{
+                        width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto',
+                        borderRadius: '1.5rem', position: 'relative', background: 'white',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                    }}>
+                        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: '600' }}>{t.title}</h2>
+                                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{t.subtitle}</p>
+                            </div>
+                            <button onClick={onClose} style={{ color: 'var(--color-text-muted)', fontSize: '1.5rem' }}>&times;</button>
+                        </div>
+
+                        <div style={{ padding: '2rem' }}>
+                            {!submitted ? (
+                                <form onSubmit={handleSubmit}>
+
+                                    {/* Section 1: Identity & Verification */}
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.05em' }}>{t.sec1}</h4>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.aadhar}</label>
+                                            <input
+                                                required type="text" maxLength="12" placeholder="12 Digit Aadhar No"
+                                                style={inputStyle} value={formData.aadhar}
+                                                onChange={(e) => setFormData({ ...formData, aadhar: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.mobile}</label>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <input
+                                                    required type="tel" maxLength="10" disabled={verified} placeholder="10 Digit Mobile"
+                                                    style={inputStyle} value={formData.mobile}
+                                                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                                                />
+                                                {!verified && (
+                                                    <button
+                                                        type="button" onClick={handleSendOtp} className="btn btn-primary"
+                                                        style={{ padding: '0 1rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                                                    >
+                                                        {otpSent ? t.resend : t.getOtp}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {!verified && otpSent && (
+                                        <div style={{ marginBottom: '1.5rem', background: '#f0fdf4', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #bbf7d0' }}>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#166534' }}>{t.enterOtp}</label>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <input
+                                                    type="text" placeholder="1234" style={{ ...inputStyle, width: '150px' }}
+                                                    value={otp} onChange={(e) => setOtp(e.target.value)}
+                                                />
+                                                <button
+                                                    type="button" onClick={handleVerifyOtp} className="btn"
+                                                    style={{ background: '#166534', color: 'white', padding: '0 1.5rem' }}
+                                                >
+                                                    {t.verify}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {verified && (
+                                        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-success)', fontSize: '0.9rem', fontWeight: '500' }}>
+                                            <span>✓ {t.verified}</span>
+                                        </div>
+                                    )}
+
+                                    <div style={{ marginBottom: '2rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.name}</label>
+                                        <input
+                                            required type="text" placeholder="Name as per Aadhar" style={inputStyle}
+                                            value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        />
+                                    </div>
+
+                                    {/* Section 2: Location Details (Searchable) */}
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.05em', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>{t.sec2}</h4>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.district}</label>
+                                            <SearchableSelect
+                                                options={districts} value={formData.district} placeholder={t.district}
+                                                onChange={(val) => setFormData({ ...formData, district: val })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.taluk}</label>
+                                            <SearchableSelect
+                                                options={taluks} value={formData.taluk} placeholder={t.taluk}
+                                                onChange={(val) => setFormData({ ...formData, taluk: val })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.village}</label>
+                                            <SearchableSelect
+                                                options={villages} value={formData.village} placeholder={t.village}
+                                                onChange={(val) => setFormData({ ...formData, village: val })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.pincode}</label>
+                                            <input
+                                                required type="text" placeholder="6 Digit Pincode" maxLength="6" style={inputStyle}
+                                                value={formData.pincode} onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Section 3: Grievance Details - Category REMOVED (AI Handles it) */}
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.05em', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>{t.sec3}</h4>
+
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{t.desc}</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <textarea
+                                                required placeholder={t.desc} rows="5"
+                                                style={{ ...inputStyle, resize: 'none', transition: 'border-color 0.3s' }}
+                                                value={formData.description}
+                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            ></textarea>
+
+                                            <div style={{ position: 'absolute', bottom: '1rem', right: '1rem' }}>
+                                                <input type="file" id="evidence-upload" style={{ display: 'none' }} onChange={handleFileChange} />
+                                                <label htmlFor="evidence-upload" title={t.evidence} style={{
+                                                    width: '2.5rem', height: '2.5rem',
+                                                    background: formData.evidence ? 'var(--color-success)' : 'rgba(0,0,0,0.1)',
+                                                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)', transition: 'all 0.2s'
+                                                }}>
+                                                    {formData.evidence ? '✓' : '+'}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* AI Results - Showing the auto-detected Department */}
+                                    {aiAnalysis && (
+                                        <div style={{ marginBottom: '2rem', background: '#f1f5f9', borderRadius: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#7c3aed' }}>AI</div>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>{t.routing}</p>
+                                                <p style={{ margin: 0, fontWeight: '600', color: '#7c3aed' }}>{aiAnalysis.category}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <button type="submit" disabled={!verified} className="btn btn-primary" style={{ width: '100%', opacity: verified ? 1 : 0.6, cursor: verified ? 'pointer' : 'not-allowed' }}>
+                                        {isSubmitting ? t.submitting : t.submit}
+                                    </button>
+                                    {!verified && <p style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.5rem', textAlign: 'center' }}>{t.verifyRem}</p>}
+                                </form>
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                                    <div style={{ width: '4rem', height: '4rem', background: 'var(--color-success)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', margin: '0 auto 1.5rem auto' }}>✓</div>
+                                    <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>{t.successTitle}</h3>
+                                    <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
+                                        {t.successMsg}, {formData.name}.<br />
+                                        {t.idMsg} <strong>#GRV-2026-X892</strong>.
+                                    </p>
+                                    <button onClick={onClose} className="btn btn-outline">{t.close}</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+
+        function App() {
+            const [view, setView] = useState('home');
+            const [showGrievanceForm, setShowGrievanceForm] = useState(false);
+            const [showHelp, setShowHelp] = useState(false);
+            const [language, setLanguage] = useState('English');
+            const [isRegistered, setIsRegistered] = useState(false);
+
+            const [currentDept, setCurrentDept] = useState(null);
+            const [activeGrievance, setActiveGrievance] = useState(null);
+
+            const handleNavigate = (page, deptId) => {
+                if (page === 'help') setShowHelp(true);
+                else if (page === 'services') {
+                    setView('services');
+                    setShowGrievanceForm(false);
+                    window.scrollTo(0, 0);
+                }
+                else if (page === 'state-summary') {
+                    setView('dept-aggregation');
+                    setShowGrievanceForm(false);
+                    window.scrollTo(0, 0);
+                }
+                else if (page === 'dept-login') {
+                    setView('dept-login');
+                    setCurrentDept(deptId);
+                }
+                else {
+                    setView(page);
+                    setShowGrievanceForm(false);
+                    window.scrollTo(0, 0);
+                }
+            };
+
+            const handleLogin = () => {
+                setView('dept-dashboard');
+            };
+
+            const handleLogout = () => {
+                setView('home');
+                setCurrentDept(null);
+                setIsRegistered(false);
+                setActiveGrievance(null);
+            };
+
+            const openActionPage = (grievance) => {
+                setActiveGrievance(grievance);
+                setView('dept-action-page');
+                window.scrollTo(0, 0);
+            };
+
+            useEffect(() => {
+                const handler = () => setShowGrievanceForm(true);
+                document.addEventListener('open-grievance', handler);
+                return () => document.removeEventListener('open-grievance', handler);
+            }, []);
+
+            return (
+                <div className="App">
+                    {view !== 'auth-login' && view !== 'dept-login' &&
+                        <Header onNavigate={handleNavigate} isScrolled={view === 'dashboard'} language={language} setLanguage={setLanguage} isRegistered={isRegistered} onLogout={handleLogout} />
+                    }
+
+                    <main>
+                        {view === 'home' && (
+                            <>
+                                <Hero language={language} />
+                                <Features language={language} />
+                            </>
+                        )}
+                        {view === 'services' && <Services language={language} />}
+                        {view === 'dashboard' && <Dashboard language={language} onLogout={handleLogout} />}
+                        {view === 'dept-dashboard' && <DepartmentDashboard language={language} deptId={currentDept} onLogout={handleLogout} onToggleOverview={openActionPage} />}
+                        {view === 'dept-action-page' && <GrievanceActionPage language={language} grievance={activeGrievance} onBack={() => setView('dept-dashboard')} onUpdate={() => { }} />}
+                        {view === 'dept-aggregation' && <AggregationDashboard language={language} onBack={() => setView('home')} />}
+                        {view === 'dept-login' && <DepartmentLogin language={language} onLogin={handleLogin} onBack={() => setView('home')} />}
+                    </main>
+                    {showGrievanceForm && <GrievanceAIForm onClose={() => setShowGrievanceForm(false)} language={language} onRegistered={() => { setIsRegistered(true); setView('dashboard'); }} />}
+                    {showHelp && <HelpModal onClose={() => setShowHelp(false)} language={language} />}
+                </div>
+            );
+        }
+
+        const rootString = ReactDOM.createRoot(document.getElementById('root'));
+        rootString.render(<App />);
+
+    </script>
+</body>
+
+</html>
